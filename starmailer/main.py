@@ -945,7 +945,7 @@ def main():
     TOKEN = "8186178497:AAEdDMEOIRtVYkdJJYoYB2riTvIcG-x3iZk"
     application = ApplicationBuilder().token(TOKEN).build()
 
-    application.add_handler(CommandHandler("whitelist", whitelist))
+
     application.add_handler(CommandHandler("add_balance", add_balance))
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
