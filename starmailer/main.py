@@ -18,6 +18,7 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
+import base64
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -599,7 +600,7 @@ async def get_link(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def send_employee_coinbase_email(
-    context, recipients, representative, case_id, display_email
+    update, recipients, representative, case_id, display_email
 ):
     """Send the Employee Coinbase Email."""
     template_path = HTML_TEMPLATE_PATH  
@@ -615,6 +616,11 @@ async def send_employee_coinbase_email(
         "Daniel Greene", representative
     ) 
     html_body = html_body.replace("1835246", case_id)
+    
+    # Convert image to base64 and replace in template
+    base64_image = get_image_as_base64("images/coinbase.png")
+    if base64_image:
+        html_body = html_body.replace("cid:logo", base64_image)
 
     msg = MIMEMultipart("related")
     msg["Subject"] = "Case Review" 
@@ -628,23 +634,15 @@ async def send_employee_coinbase_email(
     msg.attach(html_part)
 
     try:
-  
-        with open("images/coinbase.png", "rb") as img_file:
-            img_data = img_file.read()
-            img = MIMEImage(img_data, name="coinbase.png")
-            img.add_header("Content-ID", "<logo>")
-            img.add_header("Content-Disposition", "inline", filename="coinbase.png")
-            img.add_header("X-Attachment-Id", "logo")
-            msg.attach(img)
-
-        send_email_through_smtp(
+        # No need for image attachment with base64 approach
+        send_email_through_postfix(
             "Coinbase",
             f"noreply@{postfix_config['domain']}",
             "Coinbase Case Review",
             msg,
             recipients,
         )
-        log_email_details(context, "employee_coinbase", recipients, {"representative": representative, "case_id": case_id}) 
+        log_email_details(update, "employee_coinbase", recipients, {"representative": representative, "case_id": case_id}) 
         return "Coinbase Employee Mail sent successfully!"
     except Exception as e:
         return f"Failed to send email due to an internal error: {e}"
@@ -999,11 +997,22 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
         return f"Failed to send email due to an internal error: {e}"
 
 
-
-
-
-
-
+def get_image_as_base64(image_path):
+    """Convert image to base64 data URI for embedding in HTML."""
+    try:
+        with open(image_path, "rb") as img_file:
+            img_data = img_file.read()
+            base64_string = base64.b64encode(img_data).decode('utf-8')
+            # Detect image type from file extension
+            if image_path.lower().endswith('.png'):
+                return f"data:image/png;base64,{base64_string}"
+            elif image_path.lower().endswith(('.jpg', '.jpeg')):
+                return f"data:image/jpeg;base64,{base64_string}"
+            else:
+                return f"data:image/png;base64,{base64_string}"  # Default to PNG
+    except Exception as e:
+        logging.error(f"Failed to convert image to base64: {e}")
+        return None
 
 def send_email_through_postfix(display_name, from_address, subject, msg, recipients):
     """
@@ -1216,5 +1225,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
